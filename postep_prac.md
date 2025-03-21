@@ -5,7 +5,7 @@ Ten plik służy do śledzenia postępu prac nad aplikacją LokAI zgodnie z inst
 ## Faza 1: MVP (Minimum Viable Product)
 
 ### 1. Konfiguracja projektu i środowiska pracy
-- [] 1.1. Utworzenie projektu Flutter
+- [x] 1.1. Utworzenie projektu Flutter
 - [] 1.2. Konfiguracja zależności w pubspec.yaml
 - [] 1.3. Struktura projektu Flutter
 
@@ -54,3 +54,10 @@ Ten plik służy do śledzenia postępu prac nad aplikacją LokAI zgodnie z inst
 - [] 10.3. Materiały do publikacji w App Store i Google Play
 
 ## Notatki z postępu prac
+
+### 2023-06-23
+1. Utworzono nowy projekt Flutter o nazwie LokAI z następującymi parametrami:
+   - Organizacja: com.lokai
+   - Platformy docelowe: Android i iOS
+   - Zastosowano Material 3 w motywie aplikacji
+   - Dostosowano ekran główny do wymagań projektu

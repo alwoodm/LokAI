@@ -9,8 +9,6 @@
 
 prompty.md
 
-
-
 # Flutter repo-specific
 /bin/cache/
 /bin/internal/bootstrap.bat
@@ -58,6 +56,7 @@ unlinked_spec.ds
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
 *.jks
+android/app/build/
 
 # iOS/XCode related
 **/ios/**/*.mode1v3
@@ -88,6 +87,7 @@ unlinked_spec.ds
 **/ios/Flutter/flutter_export_environment.sh
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
+ios/Pods/
 
 # macOS
 **/Flutter/ephemeral/
@@ -119,3 +119,23 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# Lokalne pliki konfiguracyjne
+*.env
+*.g.dart
+*.freezed.dart
+
+# Pliki modeli AI (duże pliki)
+assets/models/*.tflite
+assets/models/*.onnx
+
+# Inne
+*.bak
