@@ -1,0 +1,2 @@
+# LokAI
+Local AI app
