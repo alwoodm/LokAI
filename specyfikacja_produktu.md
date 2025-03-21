@@ -1,4 +1,4 @@
-# Specyfikacja Produktu: LokAI - Klient AI dla Urządzeń Mobilnych Android
+# Specyfikacja Produktu: LokAI - Klient AI dla Urządzeń Mobilnych (Flutter)
 
 ## 1. Przegląd Produktu
 
@@ -6,7 +6,7 @@
 **LokAI** (Local AI Assistant)
 
 ### Opis Produktu
-LokAI to aplikacja mobilna dla systemu Android umożliwiająca użytkownikom pobieranie i uruchamianie modeli sztucznej inteligencji lokalnie na swoich urządzeniach. Aplikacja pozwala na interakcję z modelami AI podobnie do popularnych narzędzi takich jak ChatGPT, DeepSeek czy Gemini, ale z zaletą działania offline i pełnej prywatności dzięki lokalnemu przetwarzaniu.
+LokAI to cross-platformowa aplikacja mobilna zbudowana w technologii Flutter, umożliwiająca użytkownikom pobieranie i uruchamianie modeli sztucznej inteligencji lokalnie na swoich urządzeniach. Aplikacja pozwala na interakcję z modelami AI podobnie do popularnych narzędzi takich jak ChatGPT, DeepSeek czy Gemini, ale z zaletą działania offline i pełnej prywatności dzięki lokalnemu przetwarzaniu.
 
 ### Cel Produktu
 Dostarczenie prostego w obsłudze, wydajnego i bezpiecznego rozwiązania umożliwiającego korzystanie z zaawansowanych funkcji generatywnej AI na urządzeniach mobilnych bez konieczności ciągłego połączenia z internetem oraz z zachowaniem prywatności danych użytkownika.
@@ -16,7 +16,7 @@ Dostarczenie prostego w obsłudze, wydajnego i bezpiecznego rozwiązania umożli
 - Użytkownicy zainteresowani technologiami AI, którzy cenią sobie prywatność danych
 - Programiści i entuzjaści sztucznej inteligencji
 - Osoby pracujące w miejscach z ograniczonym dostępem do internetu
-- Użytkownicy urządzeń z systemem Android (wersja 10.0 i nowsze)
+- Użytkownicy urządzeń z systemem Android (10.0+) i iOS (13.0+)
 - Osoby potrzebujące wsparcia AI w codziennych zadaniach
 
 ## 3. Kluczowe Funkcje
@@ -52,19 +52,21 @@ Dostarczenie prostego w obsłudze, wydajnego i bezpiecznego rozwiązania umożli
 
 ### 4.1 Wymagania Systemowe
 
-- **System operacyjny**: Android 10.0 lub nowszy
-- **Procesor**: Co najmniej 8-rdzeniowy, preferowane urządzenia z NPU
+- **System operacyjny**: Android 10.0+ lub iOS 13.0+
+- **Procesor**: Co najmniej 4-rdzeniowy, preferowane urządzenia z NPU/GPU
 - **Pamięć RAM**: Minimum 4 GB (rekomendowane 6+ GB)
 - **Pamięć wewnętrzna**: Minimum 4 GB wolnej przestrzeni (modele AI zajmują od 500 MB do 2 GB każdy)
 - **Bateria**: Optymalizacja zużycia energii podczas pracy lokalnych modeli AI
 
 ### 4.2 Architektura Aplikacji
 
-- **Framework AI**: TensorFlow Lite / ONNX Runtime / PyTorch Mobile
+- **Framework aplikacji**: Flutter (Dart)
+- **Framework AI**: TensorFlow Lite przez tflite_flutter lub ML Kit
+- **Baza danych**: Hive lub SQLite (sqflite)
+- **Zarządzanie stanem**: Provider, Bloc lub Riverpod
 - **Optymalizacja modeli**: Kwantyzacja i kompresja dla urządzeń mobilnych
 - **Silnik konwersacyjny**: Lokalny silnik do zarządzania dialogiem i kontekstem
-- **Backend**: Lokalny serwer na urządzeniu do obsługi zapytań
-- **Interfejs użytkownika**: Natywny Android z Material Design 3
+- **Interfejs użytkownika**: Flutter Material 3 z animacjami
 
 ### 4.3 Obsługiwane Typy Modeli AI
 
@@ -89,6 +91,7 @@ Dostarczenie prostego w obsłudze, wydajnego i bezpiecznego rozwiązania umożli
 - **Tryb ciemny i jasny** - dostosowanie do preferencji użytkownika
 - **Intuicyjna nawigacja** - łatwy dostęp do wszystkich funkcji
 - **Szybkie odpowiedzi** - optymalizacja czasu generowania odpowiedzi
+- **Adaptacyjny UI** - dostosowanie do różnych rozmiarów ekranów iOS/Android
 
 ## 6. Bezpieczeństwo i Prywatność
 
@@ -105,18 +108,21 @@ Dostarczenie prostego w obsłudze, wydajnego i bezpiecznego rozwiązania umożli
 - Obsługa prostych lokalnych modeli językowych
 - Instalacja i zarządzanie modelami
 - Tryb offline dla podstawowych funkcjonalności
+- Podstawowa wersja dla Android i iOS
 
 ### 7.2 Faza 2: Rozszerzenie Funkcjonalności
 - Dodanie rozpoznawania mowy i syntezatora mowy
 - Rozszerzenie biblioteki dostępnych modeli
 - Optymalizacja wydajności i zużycia baterii
-- Interfejs API dla deweloperów
+- API dla deweloperów
+- Testy na różnych rozmiarach ekranów i urządzeniach
 
 ### 7.3 Faza 3: Zaawansowane Funkcje
 - Obsługa modeli wielomodalnych (tekst + obraz)
 - Personalizacja i dostosowanie modeli
 - Integracja z aplikacjami systemowymi
 - Rozszerzone funkcje analityczne i wsparcia dla użytkowników
+- Widżety na ekran główny dla obu platform
 
 ## 8. Potencjalne Wyzwania i Rozwiązania
 
@@ -125,21 +131,24 @@ Dostarczenie prostego w obsłudze, wydajnego i bezpiecznego rozwiązania umożli
 - **Zużycie baterii** - tryby oszczędzania energii i optymalizacja kodu
 - **Rozmiar modeli** - progresywne pobieranie i kompresja modeli
 - **Wydajność** - wykorzystanie akceleratorów sprzętowych (NPU, GPU)
+- **Różnice między platformami** - wykorzystanie abstrakcyjnych API dla specyficznych funkcji platformy
 
 ### 8.2 Wyzwania Użyteczności
 - **Jakość odpowiedzi** - balans między rozmiarem modelu a jakością wyników
 - **Opóźnienia** - mechanizmy buforowania i predykcji dla płynności interakcji
 - **Wsparcie językowe** - priorytetyzacja najpopularniejszych języków
 - **Krzywa uczenia** - intuicyjny onboarding dla nowych użytkowników
+- **Różnice w UX między platformami** - adaptacyjne interfejsy respektujące wytyczne platformy
 
 ## 9. Mierniki Sukcesu
 
 - **Liczba aktywnych użytkowników**
 - **Czas spędzany z aplikacją**
 - **Różnorodność wykorzystywanych modeli**
-- **Oceny i opinie w sklepie Google Play**
+- **Oceny i opinie w App Store i Google Play**
 - **Wskaźnik retencji użytkowników**
 - **Wydajność i stabilność aplikacji**
+- **Zasięg na różnych platformach**
 
 ## 10. Rynek i Konkurencja
 
@@ -147,14 +156,16 @@ Dostarczenie prostego w obsłudze, wydajnego i bezpiecznego rozwiązania umożli
 - Rosnące zapotrzebowanie na prywatne i bezpieczne rozwiązania AI
 - Trend w kierunku edge computing i przetwarzania lokalnego
 - Coraz większa moc obliczeniowa urządzeń mobilnych
+- Różnorodność platform zwiększająca potencjalny zasięg
 
 ### 10.2 Konkurencja
 - Aplikacje bazujące na połączeniu z API zewnętrznych dostawców AI
-- Zintegrowane asystenci głosowi (Google Assistant, Bixby)
+- Zintegrowane asystenci głosowi (Google Assistant, Siri)
 - Inne aplikacje z lokalnymi modelami AI
 
 ### 10.3 Przewaga Konkurencyjna
 - Pełna funkcjonalność offline
 - Ochrona prywatności dzięki lokalnemu przetwarzaniu
 - Elastyczność w wyborze i zarządzaniu modelami
-- Optymalizacja pod kątem urządzeń z systemem Android
+- Cross-platformowość - dostępność zarówno na Androidzie jak i iOS
+- Natywna wydajność dzięki kompilacji do kodu natywnego przez Flutter
