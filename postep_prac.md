@@ -6,12 +6,12 @@ Ten plik służy do śledzenia postępu prac nad aplikacją LokAI zgodnie z inst
 
 ### 1. Konfiguracja projektu i środowiska pracy
 - [x] 1.1. Utworzenie projektu Flutter
-- [] 1.2. Konfiguracja zależności w pubspec.yaml
-- [] 1.3. Struktura projektu Flutter
+- [x] 1.2. Konfiguracja zależności w pubspec.yaml
+- [x] 1.3. Struktura projektu Flutter
 
 ### 2. Implementacja architektury aplikacji
-- [] 2.1. Modele danych i schematy
-- [] 2.2. Implementacja lokalnej bazy danych (Hive/sqflite)
+- [x] 2.1. Modele danych i schematy
+- [x] 2.2. Implementacja lokalnej bazy danych (Hive/sqflite)
 - [] 2.3. Repozytorium i zarządzanie stanem (Provider/Bloc/Riverpod)
 
 ### 3. Interfejs użytkownika

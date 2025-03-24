@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+// Usunięto nieużywany import flutter_localizations
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lokai/models/adapters/hive_adapters.dart';
 // Generated file once we use the 'generate: true' option and 'flutter gen-l10n'
@@ -14,9 +14,12 @@ void main() async {
   // Register all adapters
   try {
     HiveAdapters.registerAdapters();
-    print('Hive adapters registered successfully');
+    // Zastąpiono print logowaniem lub komentarzem
+    // print('Hive adapters registered successfully');
   } catch (e) {
-    print('Error registering Hive adapters: $e');
+    // Zastąpiono print logowaniem lub komunikatem do użytkownika
+    // print('Error registering Hive adapters: $e');
+    debugPrint('Error registering Hive adapters: $e');
   }
   
   runApp(const MyApp());
