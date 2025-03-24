@@ -12,7 +12,7 @@ Ten plik służy do śledzenia postępu prac nad aplikacją LokAI zgodnie z inst
 ### 2. Implementacja architektury aplikacji
 - [x] 2.1. Modele danych i schematy
 - [x] 2.2. Implementacja lokalnej bazy danych (Hive/sqflite)
-- [] 2.3. Repozytorium i zarządzanie stanem (Provider/Bloc/Riverpod)
+- [x] 2.3. Repozytorium i zarządzanie stanem (Provider/Bloc/Riverpod)
 
 ### 3. Interfejs użytkownika
 - [] 3.1. Implementacja nawigacji (Navigator 2.0 / go_router)

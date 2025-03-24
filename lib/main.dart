@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lokai/models/adapters/hive_adapters.dart';
-// Generated file once we use the 'generate: true' option and 'flutter gen-l10n'
-// import 'package:lokai/l10n/app_localizations.dart';
+import 'package:lokai/routing/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +18,6 @@ void main() async {
     debugPrint('Error registering Hive adapters: $e');
   }
   
-  // Owijamy aplikację w ProviderScope, aby udostępnić dostawców Riverpod
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -28,24 +26,14 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'LokAI',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true, // Enable Material 3
       ),
-      // Uncomment these lines when we add actual translations
-      // localizationsDelegates: const [
-      //   AppLocalizations.delegate,
-      //   GlobalMaterialLocalizations.delegate,
-      //   GlobalWidgetsLocalizations.delegate,
-      //   GlobalCupertinoLocalizations.delegate,
-      // ],
-      // supportedLocales: const [
-      //   Locale('en', ''), // English
-      //   Locale('pl', ''), // Polish
-      // ],
-      home: const MyHomePage(title: 'LokAI - Local AI Assistant'),
+      routerConfig: appRouter,
+      debugShowCheckedModeBanner: false,
     );
   }
 }
