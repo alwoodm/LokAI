@@ -4,13 +4,21 @@ import 'package:lokai/models/user_settings.dart';
 class SettingsRepository {
   static const String _boxName = 'settings';
   static const String _settingsKey = 'user_settings';
+  static Box? _box;
   
   /// Opens the settings box
   Future<Box> _openBox() async {
-    if (!Hive.isBoxOpen(_boxName)) {
-      return await Hive.openBox(_boxName);
+    if (_box != null && _box!.isOpen) {
+      return _box!;
     }
-    return Hive.box(_boxName);
+    
+    if (Hive.isBoxOpen(_boxName)) {
+      _box = Hive.box(_boxName);
+      return _box!;
+    }
+    
+    _box = await Hive.openBox(_boxName);
+    return _box!;
   }
   
   /// Saves user settings

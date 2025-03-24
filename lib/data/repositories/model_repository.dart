@@ -3,13 +3,21 @@ import 'package:lokai/models/ai_model.dart';
 
 class ModelRepository {
   static const String _boxName = 'ai_models';
+  static Box? _box;
   
   /// Opens the AI models box
-  Future<Box<AIModel>> _openBox() async {
-    if (!Hive.isBoxOpen(_boxName)) {
-      return await Hive.openBox<AIModel>(_boxName);
+  Future<Box> _openBox() async {
+    if (_box != null && _box!.isOpen) {
+      return _box!;
     }
-    return Hive.box<AIModel>(_boxName);
+    
+    if (Hive.isBoxOpen(_boxName)) {
+      _box = Hive.box(_boxName);
+      return _box!;
+    }
+    
+    _box = await Hive.openBox(_boxName);
+    return _box!;
   }
   
   /// Adds a new AI model
@@ -22,13 +30,17 @@ class ModelRepository {
   /// Gets a model by id
   Future<AIModel?> getModel(String id) async {
     final box = await _openBox();
-    return box.get(id);
+    final dynamic result = box.get(id);
+    if (result is AIModel) {
+      return result;
+    }
+    return null;
   }
   
   /// Gets all models
   Future<List<AIModel>> getAllModels() async {
     final box = await _openBox();
-    return box.values.toList();
+    return box.values.whereType<AIModel>().toList();
   }
   
   /// Updates a model
@@ -46,7 +58,10 @@ class ModelRepository {
   /// Gets the active model
   Future<AIModel?> getActiveModel() async {
     final box = await _openBox();
-    final models = box.values.where((model) => model.isActive).toList();
+    final models = box.values
+        .whereType<AIModel>()
+        .where((model) => model.isActive)
+        .toList();
     return models.isNotEmpty ? models.first : null;
   }
   

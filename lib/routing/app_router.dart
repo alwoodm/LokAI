@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lokai/ui/screens/home_screen.dart';
-import 'package:lokai/ui/screens/chat_screen.dart';
-import 'package:lokai/ui/screens/models_screen.dart';
-import 'package:lokai/ui/screens/settings_screen.dart';
+import 'package:lokai/ui/screens/index.dart';
 
 /// App router configuration
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');

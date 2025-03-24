@@ -3,13 +3,21 @@ import 'package:lokai/models/message.dart';
 
 class MessageRepository {
   static const String _boxName = 'messages';
+  static Box? _box;
   
   /// Opens the messages box
-  Future<Box<Message>> _openBox() async {
-    if (!Hive.isBoxOpen(_boxName)) {
-      return await Hive.openBox<Message>(_boxName);
+  Future<Box> _openBox() async {
+    if (_box != null && _box!.isOpen) {
+      return _box!;
     }
-    return Hive.box<Message>(_boxName);
+    
+    if (Hive.isBoxOpen(_boxName)) {
+      _box = Hive.box(_boxName);
+      return _box!;
+    }
+    
+    _box = await Hive.openBox(_boxName);
+    return _box!;
   }
   
   /// Creates a new message
@@ -22,15 +30,20 @@ class MessageRepository {
   /// Gets a message by id
   Future<Message?> getMessage(String id) async {
     final box = await _openBox();
-    return box.get(id);
+    final dynamic result = box.get(id);
+    if (result is Message) {
+      return result;
+    }
+    return null;
   }
   
   /// Gets all messages for a conversation
   Future<List<Message>> getConversationMessages(String conversationId) async {
     final box = await _openBox();
-    return box.values.where((message) => 
-      message.conversationId == conversationId
-    ).toList();
+    return box.values
+        .whereType<Message>()
+        .where((message) => message.conversationId == conversationId)
+        .toList();
   }
   
   /// Gets messages for a conversation sorted by timestamp
@@ -61,7 +74,7 @@ class MessageRepository {
   /// Gets the latest message for each conversation
   Future<Map<String, Message>> getLatestMessages() async {
     final box = await _openBox();
-    final messages = box.values.toList();
+    final messages = box.values.whereType<Message>().toList();
     
     // Group messages by conversation ID
     final Map<String, List<Message>> groupedMessages = {};

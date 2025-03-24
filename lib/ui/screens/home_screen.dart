@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lokai/models/conversation.dart';
+import 'package:lokai/models/message.dart';
 import 'package:lokai/providers/conversation_provider.dart';
 import 'package:lokai/providers/message_provider.dart';
 
@@ -99,7 +100,7 @@ class HomeScreen extends ConsumerWidget {
                               ),
                             ),
                       leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                        backgroundColor: Theme.of(context).primaryColor.withAlpha(50),
                         child: Icon(
                           Icons.chat,
                           color: Theme.of(context).primaryColor,
@@ -136,11 +137,29 @@ class HomeScreen extends ConsumerWidget {
   }
   
   Future<void> _createNewConversation(BuildContext context, WidgetRef ref) async {
-    final notifier = ref.read(conversationNotifierProvider.notifier);
-    final newConversation = Conversation(title: 'New conversation');
-    final id = await notifier.addConversation(newConversation);
-    if (context.mounted) {
-      context.go('/chat/$id');
+    try {
+      final notifier = ref.read(conversationNotifierProvider.notifier);
+      final newConversation = Conversation(title: 'New conversation');
+      final id = await notifier.addConversation(newConversation);
+      
+      // Add a welcome message to the new conversation
+      final messageNotifier = ref.read(messageNotifierProvider.notifier);
+      final welcomeMessage = Message(
+        text: 'Hello! How can I help you today?',
+        isUser: false,
+        conversationId: id,
+      );
+      await messageNotifier.addMessage(welcomeMessage);
+      
+      if (context.mounted) {
+        context.go('/chat/$id');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error creating conversation: $e')),
+        );
+      }
     }
   }
   

@@ -3,13 +3,21 @@ import 'package:lokai/models/conversation.dart';
 
 class ConversationRepository {
   static const String _boxName = 'conversations';
+  static Box? _box;
   
   /// Opens the conversations box
-  Future<Box<Conversation>> _openBox() async {
-    if (!Hive.isBoxOpen(_boxName)) {
-      return await Hive.openBox<Conversation>(_boxName);
+  Future<Box> _openBox() async {
+    if (_box != null && _box!.isOpen) {
+      return _box!;
     }
-    return Hive.box<Conversation>(_boxName);
+    
+    if (Hive.isBoxOpen(_boxName)) {
+      _box = Hive.box(_boxName);
+      return _box!;
+    }
+    
+    _box = await Hive.openBox(_boxName);
+    return _box!;
   }
   
   /// Creates a new conversation
@@ -22,13 +30,17 @@ class ConversationRepository {
   /// Gets a conversation by id
   Future<Conversation?> getConversation(String id) async {
     final box = await _openBox();
-    return box.get(id);
+    final dynamic result = box.get(id);
+    if (result is Conversation) {
+      return result;
+    }
+    return null;
   }
   
   /// Gets all conversations
   Future<List<Conversation>> getAllConversations() async {
     final box = await _openBox();
-    return box.values.toList();
+    return box.values.whereType<Conversation>().toList();
   }
   
   /// Updates a conversation
@@ -53,7 +65,7 @@ class ConversationRepository {
   /// Gets recent conversations
   Future<List<Conversation>> getRecentConversations({int limit = 10}) async {
     final box = await _openBox();
-    final conversations = box.values.toList();
+    final conversations = box.values.whereType<Conversation>().toList();
     conversations.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return conversations.take(limit).toList();
   }

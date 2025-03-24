@@ -4,16 +4,12 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lokai/models/adapters/hive_adapters.dart';
 import 'package:lokai/providers/settings_provider.dart';
 import 'package:lokai/routing/app_router.dart';
-import 'package:path_provider/path_provider.dart' as path_provider;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Get application documents directory for Hive storage
-  final appDocumentDirectory = await path_provider.getApplicationDocumentsDirectory();
-  
-  // Initialize Hive with specific path
-  await Hive.initFlutter(appDocumentDirectory.path);
+  // Initialize Hive
+  await Hive.initFlutter();
   
   // Register all adapters
   try {
@@ -23,18 +19,10 @@ void main() async {
     debugPrint('Error registering Hive adapters: $e');
   }
   
-  // Ensure boxes are open at app start
-  await _openHiveBoxes();
+  // Open common boxes - we'll let repositories handle their specific boxes
+  await Hive.openBox('settings');
   
   runApp(const ProviderScope(child: MyApp()));
-}
-
-/// Open all Hive boxes at application start
-Future<void> _openHiveBoxes() async {
-  await Hive.openBox('settings');
-  await Hive.openBox<dynamic>('conversations');
-  await Hive.openBox<dynamic>('messages');
-  await Hive.openBox<dynamic>('ai_models');
 }
 
 class MyApp extends ConsumerWidget {
