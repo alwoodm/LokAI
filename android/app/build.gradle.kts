@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.lokai.lokai"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"  // Dodana linia z wymaganą wersją NDK
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
