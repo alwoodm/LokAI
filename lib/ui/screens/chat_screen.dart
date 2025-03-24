@@ -17,11 +17,12 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  bool _isLoading = false;
   
   @override
   void initState() {
     super.initState();
-    // Załaduj wiadomości dla tej konwersacji
+    // Load messages for this conversation
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(messageNotifierProvider.notifier).loadMessages(widget.conversationId);
     });
@@ -47,7 +48,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     messageNotifier.addMessage(newMessage);
     _messageController.clear();
     
-    // Przewiń do najnowszej wiadomości
+    // Scroll to the latest message
+    _scrollToBottom();
+    
+    // AI response simulation
+    setState(() {
+      _isLoading = true;
+    });
+    
+    // Simulate AI response delay
+    Future.delayed(const Duration(seconds: 1), () {
+      final aiResponse = Message(
+        text: 'This is a sample response from the AI. I can help you with various tasks like writing, translation, data analysis, and more.',
+        isUser: false,
+        conversationId: widget.conversationId,
+      );
+      
+      messageNotifier.addMessage(aiResponse);
+      setState(() {
+        _isLoading = false;
+      });
+      
+      // Scroll to the latest message
+      _scrollToBottom();
+    });
+  }
+  
+  void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -57,145 +84,270 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         );
       }
     });
-    
-    // Symulacja odpowiedzi od AI (docelowo zintegrowana z rzeczywistym modelem)
-    Future.delayed(const Duration(seconds: 1), () {
-      final aiResponse = Message(
-        text: 'To jest przykładowa odpowiedź od AI na twoje pytanie.',
-        isUser: false,
-        conversationId: widget.conversationId,
-      );
-      messageNotifier.addMessage(aiResponse);
-      
-      // Przewiń do najnowszej wiadomości
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
-    });
   }
   
   @override
   Widget build(BuildContext context) {
     final conversationAsync = ref.watch(conversationProvider(widget.conversationId));
     final messagesAsync = ref.watch(messageNotifierProvider);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
       appBar: AppBar(
         title: conversationAsync.when(
-          data: (conversation) => Text(conversation?.title ?? 'Konwersacja'),
-          loading: () => const Text('Ładowanie...'),
-          error: (_, __) => const Text('Błąd'),
+          data: (conversation) => Text(conversation?.title ?? 'Conversation'),
+          loading: () => const Text('Loading...'),
+          error: (_, __) => const Text('Error'),
         ),
+        backgroundColor: isDarkMode ? const Color(0xFF343541) : null,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => context.go('/settings'),
+          ),
+          IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () {
-              ref.read(conversationNotifierProvider.notifier).deleteConversation(widget.conversationId);
-              context.go('/');
+              _showDeleteConfirmation(context);
             },
           ),
         ],
       ),
       body: Column(
         children: [
-          // Lista wiadomości
+          // Messages list
           Expanded(
-            child: messagesAsync.when(
-              data: (messages) {
-                if (messages.isEmpty) {
-                  return const Center(
-                    child: Text('Rozpocznij konwersację'),
-                  );
-                }
-                
-                return ListView.builder(
-                  controller: _scrollController,
-                  itemCount: messages.length,
-                  padding: const EdgeInsets.all(8.0),
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    return Align(
-                      alignment: message.isUser 
-                          ? Alignment.centerRight 
-                          : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4.0),
-                        padding: const EdgeInsets.all(12.0),
-                        decoration: BoxDecoration(
-                          color: message.isUser
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.secondary,
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.75,
-                        ),
-                        child: Text(
-                          message.text,
-                          style: TextStyle(
-                            color: message.isUser
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.onSecondary,
+            child: Container(
+              color: isDarkMode ? const Color(0xFF343541) : const Color(0xFFF7F7F8),
+              child: messagesAsync.when(
+                data: (messages) {
+                  if (messages.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 48,
+                            color: Colors.grey[400],
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Start a conversation',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                     );
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text('Błąd: $error')),
+                  }
+                  
+                  return ListView.builder(
+                    controller: _scrollController,
+                    itemCount: messages.length + (_isLoading ? 1 : 0),
+                    padding: const EdgeInsets.all(0),
+                    itemBuilder: (context, index) {
+                      // Show loading indicator at the end of the list
+                      if (_isLoading && index == messages.length) {
+                        return _buildLoadingMessage();
+                      }
+                      
+                      final message = messages[index];
+                      return _buildMessageTile(message, isDarkMode);
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text('Error: $error')),
+              ),
             ),
           ),
           
-          // Pasek wprowadzania wiadomości
+          // Message input bar
           Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4.0,
-                  offset: const Offset(0, -1),
+            color: isDarkMode ? const Color(0xFF343541) : const Color(0xFFF7F7F8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xFF40414F) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Napisz wiadomość...',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: 'Type a message...',
+                        hintStyle: TextStyle(
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                      maxLines: null,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _sendMessage(),
                     ),
-                    maxLines: null,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendMessage(),
                   ),
-                ),
-                const SizedBox(width: 8.0),
-                FloatingActionButton(
-                  onPressed: _sendMessage,
-                  mini: true,
-                  child: const Icon(Icons.send),
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: IconButton(
+                      onPressed: _sendMessage,
+                      icon: Icon(
+                        Icons.send_rounded,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+  
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Conversation'),
+        content: const Text('Are you sure you want to delete this conversation? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ref.read(conversationNotifierProvider.notifier).deleteConversation(widget.conversationId);
+              context.go('/');
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildMessageTile(Message message, bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      color: message.isUser 
+          ? (isDarkMode ? const Color(0xFF343541) : const Color(0xFFF7F7F8))
+          : (isDarkMode ? const Color(0xFF444654) : Colors.white),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar for message
+            CircleAvatar(
+              backgroundColor: message.isUser 
+                  ? Colors.deepPurple[100]
+                  : Colors.deepPurple[400],
+              child: Icon(
+                message.isUser ? Icons.person : Icons.smart_toy,
+                color: message.isUser ? Colors.deepPurple : Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            
+            // Message content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message.isUser ? 'You' : 'LokAI',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    message.text,
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildLoadingMessage() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      color: isDarkMode ? const Color(0xFF444654) : Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // AI avatar
+            CircleAvatar(
+              backgroundColor: Colors.deepPurple[400],
+              child: const Icon(
+                Icons.smart_toy,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            
+            // Loading indicator
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'LokAI',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: 30,
+                  height: 20,
+                  child: LinearProgressIndicator(
+                    backgroundColor: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).primaryColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

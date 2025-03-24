@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lokai/models/adapters/hive_adapters.dart';
+import 'package:lokai/providers/settings_provider.dart';
 import 'package:lokai/routing/app_router.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Hive
-  await Hive.initFlutter();
+  // Get application documents directory for Hive storage
+  final appDocumentDirectory = await path_provider.getApplicationDocumentsDirectory();
+  
+  // Initialize Hive with specific path
+  await Hive.initFlutter(appDocumentDirectory.path);
   
   // Register all adapters
   try {
@@ -18,7 +23,18 @@ void main() async {
     debugPrint('Error registering Hive adapters: $e');
   }
   
+  // Ensure boxes are open at app start
+  await _openHiveBoxes();
+  
   runApp(const ProviderScope(child: MyApp()));
+}
+
+/// Open all Hive boxes at application start
+Future<void> _openHiveBoxes() async {
+  await Hive.openBox('settings');
+  await Hive.openBox<dynamic>('conversations');
+  await Hive.openBox<dynamic>('messages');
+  await Hive.openBox<dynamic>('ai_models');
 }
 
 class MyApp extends ConsumerWidget {
@@ -26,14 +42,43 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp.router(
-      title: 'LokAI',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true, // Enable Material 3
+    // Obserwujemy ustawienia użytkownika aby reagować na zmiany motywu
+    final settingsAsync = ref.watch(settingsNotifierProvider);
+    
+    return settingsAsync.when(
+      data: (settings) {
+        return MaterialApp.router(
+          title: 'LokAI',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          themeMode: settings.themeMode,
+          routerConfig: appRouter,
+          debugShowCheckedModeBanner: false,
+        );
+      },
+      loading: () => MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
       ),
-      routerConfig: appRouter,
-      debugShowCheckedModeBanner: false,
+      error: (error, stackTrace) => MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text('Błąd inicjalizacji: $error'),
+          ),
+        ),
+      ),
     );
   }
 }

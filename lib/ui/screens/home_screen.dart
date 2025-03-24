@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lokai/models/conversation.dart';
 import 'package:lokai/providers/conversation_provider.dart';
+import 'package:lokai/providers/message_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -10,10 +11,13 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final conversationsAsync = ref.watch(allConversationsProvider);
+    final latestMessagesAsync = ref.watch(latestMessagesProvider);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
       appBar: AppBar(
         title: const Text('LokAI'),
+        backgroundColor: isDarkMode ? const Color(0xFF343541) : null,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -21,63 +25,148 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: conversationsAsync.when(
-        data: (conversations) {
-          if (conversations.isEmpty) {
-            return const Center(
-              child: Text('Nie masz jeszcze żadnych konwersacji'),
-            );
-          }
-          
-          return ListView.builder(
-            itemCount: conversations.length,
-            itemBuilder: (context, index) {
-              final conversation = conversations[index];
-              return ListTile(
-                title: Text(conversation.title),
-                subtitle: Text('Ostatnia aktualizacja: ${conversation.updatedAt.toString().split('.')[0]}'),
-                onTap: () => context.go('/chat/${conversation.id}'),
+      body: Container(
+        color: isDarkMode ? const Color(0xFF343541) : const Color(0xFFF7F7F8),
+        child: conversationsAsync.when(
+          data: (conversations) {
+            if (conversations.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'No conversations yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton.icon(
+                      onPressed: () => _createNewConversation(context, ref),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Start a new conversation'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
               );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Błąd: $error')),
+            }
+            
+            return latestMessagesAsync.when(
+              data: (latestMessages) => ListView.builder(
+                itemCount: conversations.length,
+                itemBuilder: (context, index) {
+                  final conversation = conversations[index];
+                  final lastMessage = latestMessages[conversation.id];
+                  
+                  return Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    elevation: 0,
+                    color: isDarkMode ? const Color(0xFF3E3F4B) : Colors.white,
+                    child: ListTile(
+                      title: Text(
+                        conversation.title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      subtitle: lastMessage != null
+                          ? Text(
+                              lastMessage.text.length > 60
+                                  ? '${lastMessage.text.substring(0, 60)}...'
+                                  : lastMessage.text,
+                              style: TextStyle(
+                                color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                              ),
+                            )
+                          : Text(
+                              'No messages',
+                              style: TextStyle(
+                                color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                      leading: CircleAvatar(
+                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                        child: Icon(
+                          Icons.chat,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      trailing: Text(
+                        _formatDate(conversation.updatedAt),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      onTap: () => context.go('/chat/${conversation.id}'),
+                    ),
+                  );
+                },
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(child: Text('Error: $error')),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(child: Text('Error: $error')),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final notifier = ref.read(conversationNotifierProvider.notifier);
-          final newConversation = Conversation(title: 'Nowa konwersacja');
-          final id = await notifier.addConversation(newConversation);
-          if (context.mounted) {
-            context.go('/chat/$id');
-          }
-        },
-        tooltip: 'Nowa konwersacja',
-        child: const Icon(Icons.add),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          switch (index) {
-            case 0: // Już jesteśmy na stronie głównej
-              break;
-            case 1:
-              context.go('/models');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Główna',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.model_training),
-            label: 'Modele',
-          ),
-        ],
+        onPressed: () => _createNewConversation(context, ref),
+        tooltip: 'New conversation',
+        backgroundColor: Theme.of(context).primaryColor,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
+  }
+  
+  Future<void> _createNewConversation(BuildContext context, WidgetRef ref) async {
+    final notifier = ref.read(conversationNotifierProvider.notifier);
+    final newConversation = Conversation(title: 'New conversation');
+    final id = await notifier.addConversation(newConversation);
+    if (context.mounted) {
+      context.go('/chat/$id');
+    }
+  }
+  
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inDays == 0) {
+      return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    } else if (difference.inDays < 7) {
+      return _getDayName(date.weekday);
+    } else {
+      return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    }
+  }
+  
+  String _getDayName(int weekday) {
+    switch (weekday) {
+      case 1: return 'Monday';
+      case 2: return 'Tuesday';
+      case 3: return 'Wednesday';
+      case 4: return 'Thursday';
+      case 5: return 'Friday';
+      case 6: return 'Saturday';
+      case 7: return 'Sunday';
+      default: return '';
+    }
   }
 }

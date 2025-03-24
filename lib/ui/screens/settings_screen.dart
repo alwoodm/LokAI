@@ -9,105 +9,133 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsNotifierProvider);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ustawienia'),
+        title: const Text('Settings'),
+        backgroundColor: isDarkMode ? const Color(0xFF343541) : null,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
         ),
       ),
-      body: settingsAsync.when(
-        data: (settings) => ListView(
-          children: [
-            ListTile(
-              title: const Text('Motyw aplikacji'),
-              subtitle: Text(_getThemeModeName(settings.themeMode)),
-              trailing: DropdownButton<ThemeMode>(
-                value: settings.themeMode,
-                onChanged: (ThemeMode? newValue) {
-                  if (newValue != null) {
-                    ref.read(settingsNotifierProvider.notifier).setThemeMode(newValue);
-                  }
-                },
-                items: const [
-                  DropdownMenuItem(
-                    value: ThemeMode.system,
-                    child: Text('Systemowy'),
+      body: Container(
+        color: isDarkMode ? const Color(0xFF343541) : const Color(0xFFF7F7F8),
+        child: settingsAsync.when(
+          data: (settings) => ListView(
+            children: [
+              Card(
+                margin: const EdgeInsets.all(8),
+                color: isDarkMode ? const Color(0xFF3E3F4B) : Colors.white,
+                elevation: 0,
+                child: ListTile(
+                  title: const Text('App Theme'),
+                  subtitle: Text(_getThemeModeName(settings.themeMode)),
+                  trailing: DropdownButton<ThemeMode>(
+                    value: settings.themeMode,
+                    onChanged: (ThemeMode? newValue) {
+                      if (newValue != null) {
+                        ref.read(settingsNotifierProvider.notifier).setThemeMode(newValue);
+                      }
+                    },
+                    dropdownColor: isDarkMode ? const Color(0xFF3E3F4B) : Colors.white,
+                    items: const [
+                      DropdownMenuItem(
+                        value: ThemeMode.system,
+                        child: Text('System'),
+                      ),
+                      DropdownMenuItem(
+                        value: ThemeMode.light,
+                        child: Text('Light'),
+                      ),
+                      DropdownMenuItem(
+                        value: ThemeMode.dark,
+                        child: Text('Dark'),
+                      ),
+                    ],
                   ),
-                  DropdownMenuItem(
-                    value: ThemeMode.light,
-                    child: Text('Jasny'),
-                  ),
-                  DropdownMenuItem(
-                    value: ThemeMode.dark,
-                    child: Text('Ciemny'),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-            SwitchListTile(
-              title: const Text('Wejście głosowe'),
-              subtitle: const Text('Używaj mikrofonu do wprowadzania tekstu'),
-              value: settings.useVoiceInput,
-              onChanged: (bool value) {
-                ref.read(settingsNotifierProvider.notifier).setVoiceInput(value);
-              },
-            ),
-            SwitchListTile(
-              title: const Text('Wyjście głosowe'),
-              subtitle: const Text('Czytaj odpowiedzi AI na głos'),
-              value: settings.useVoiceOutput,
-              onChanged: (bool value) {
-                ref.read(settingsNotifierProvider.notifier).setVoiceOutput(value);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              title: const Text('Język'),
-              subtitle: Text(_getLanguageName(settings.languageCode)),
-              trailing: DropdownButton<String>(
-                value: settings.languageCode,
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    ref.read(settingsNotifierProvider.notifier).setLanguage(newValue);
-                  }
-                },
-                items: const [
-                  DropdownMenuItem(
-                    value: 'en',
-                    child: Text('English'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'pl',
-                    child: Text('Polski'),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  ref.read(settingsNotifierProvider.notifier).clearSettings();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Ustawienia zostały zresetowane')),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[100],
-                  foregroundColor: Colors.red[900],
                 ),
-                child: const Text('Zresetuj wszystkie ustawienia'),
               ),
-            ),
-          ],
+              const Divider(height: 1, color: Colors.transparent),
+              Card(
+                margin: const EdgeInsets.all(8),
+                color: isDarkMode ? const Color(0xFF3E3F4B) : Colors.white,
+                elevation: 0,
+                child: SwitchListTile(
+                  title: const Text('Voice Input'),
+                  subtitle: const Text('Use microphone to enter text'),
+                  value: settings.useVoiceInput,
+                  onChanged: (bool value) {
+                    ref.read(settingsNotifierProvider.notifier).setVoiceInput(value);
+                  },
+                ),
+              ),
+              const Divider(height: 1, color: Colors.transparent),
+              Card(
+                margin: const EdgeInsets.all(8),
+                color: isDarkMode ? const Color(0xFF3E3F4B) : Colors.white,
+                elevation: 0,
+                child: SwitchListTile(
+                  title: const Text('Voice Output'),
+                  subtitle: const Text('Read AI responses aloud'),
+                  value: settings.useVoiceOutput,
+                  onChanged: (bool value) {
+                    ref.read(settingsNotifierProvider.notifier).setVoiceOutput(value);
+                  },
+                ),
+              ),
+              const Divider(height: 1, color: Colors.transparent),
+              Card(
+                margin: const EdgeInsets.all(8),
+                color: isDarkMode ? const Color(0xFF3E3F4B) : Colors.white,
+                elevation: 0,
+                child: ListTile(
+                  title: const Text('Language'),
+                  subtitle: Text(_getLanguageName(settings.languageCode)),
+                  trailing: DropdownButton<String>(
+                    value: settings.languageCode,
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        ref.read(settingsNotifierProvider.notifier).setLanguage(newValue);
+                      }
+                    },
+                    dropdownColor: isDarkMode ? const Color(0xFF3E3F4B) : Colors.white,
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'en',
+                        child: Text('English'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'pl',
+                        child: Text('Polish'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    ref.read(settingsNotifierProvider.notifier).clearSettings();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Settings have been reset')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[100],
+                    foregroundColor: Colors.red[900],
+                  ),
+                  child: const Text('Reset All Settings'),
+                ),
+              ),
+            ],
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(child: Text('Error: $error')),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Błąd: $error')),
       ),
     );
   }
@@ -115,11 +143,11 @@ class SettingsScreen extends ConsumerWidget {
   String _getThemeModeName(ThemeMode themeMode) {
     switch (themeMode) {
       case ThemeMode.system:
-        return 'Systemowy';
+        return 'System';
       case ThemeMode.light:
-        return 'Jasny';
+        return 'Light';
       case ThemeMode.dark:
-        return 'Ciemny';
+        return 'Dark';
     }
   }
   
@@ -128,7 +156,7 @@ class SettingsScreen extends ConsumerWidget {
       case 'en':
         return 'English';
       case 'pl':
-        return 'Polski';
+        return 'Polish';
       default:
         return languageCode;
     }
