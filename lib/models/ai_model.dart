@@ -1,29 +1,17 @@
+import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 
-/// Represents an AI model that can be used by the application.
+// Usuwamy part directive, ponieważ implementujemy adapter ręcznie
+// part 'ai_model.g.dart';
+
 class AIModel {
-  /// Unique identifier for the model
   final String id;
-  
-  /// Name of the model
   final String name;
-  
-  /// Description of the model and its capabilities
   final String description;
-  
-  /// Size of the model file in bytes
   final int size;
-  
-  /// Path to the model file on the device
   final String filePath;
-  
-  /// When the model was downloaded
   final DateTime downloadedAt;
-  
-  /// Version of the model
   final String version;
-  
-  /// Whether the model is currently in use
   bool isActive;
 
   /// Creates a new AIModel with the given parameters.
@@ -99,4 +87,44 @@ class AIModel {
   
   @override
   int get hashCode => id.hashCode;
+}
+
+class AIModelAdapter extends TypeAdapter<AIModel> {
+  @override
+  final int typeId = 3;
+
+  @override
+  AIModel read(BinaryReader reader) {
+    final id = reader.readString();
+    final name = reader.readString();
+    final description = reader.readString();
+    final size = reader.readInt();
+    final filePath = reader.readString();
+    final downloadedAt = DateTime.parse(reader.readString());
+    final version = reader.readString();
+    final isActive = reader.readBool();
+    
+    return AIModel(
+      id: id,
+      name: name,
+      description: description,
+      size: size,
+      filePath: filePath,
+      downloadedAt: downloadedAt,
+      version: version,
+      isActive: isActive,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, AIModel obj) {
+    writer.writeString(obj.id);
+    writer.writeString(obj.name);
+    writer.writeString(obj.description);
+    writer.writeInt(obj.size);
+    writer.writeString(obj.filePath);
+    writer.writeString(obj.downloadedAt.toIso8601String());
+    writer.writeString(obj.version);
+    writer.writeBool(obj.isActive);
+  }
 }

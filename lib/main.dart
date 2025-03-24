@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:lokai/models/adapters/hive_adapters.dart';
 // Generated file once we use the 'generate: true' option and 'flutter gen-l10n'
 // import 'package:lokai/l10n/app_localizations.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Hive
+  await Hive.initFlutter();
+  
+  // Register all adapters
+  try {
+    HiveAdapters.registerAdapters();
+    print('Hive adapters registered successfully');
+  } catch (e) {
+    print('Error registering Hive adapters: $e');
+  }
+  
   runApp(const MyApp());
 }
 

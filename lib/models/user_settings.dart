@@ -1,34 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 
-/// Represents user preferences and settings.
 class UserSettings {
-  /// General preferences map for any user settings
   final Map<String, dynamic> preferences;
-  
-  /// ID of the currently selected AI model
   String? selectedModelId;
-  
-  /// Current theme mode (light, dark, system)
-  ThemeMode themeMode;
-  
-  /// Whether to use voice input
+  String themeModeString;
   bool useVoiceInput;
-  
-  /// Whether to use voice output
   bool useVoiceOutput;
-  
-  /// System language code (e.g., 'en', 'pl')
   String languageCode;
 
   /// Creates a new UserSettings instance with the given parameters.
   UserSettings({
     Map<String, dynamic>? preferences,
     this.selectedModelId,
-    this.themeMode = ThemeMode.system,
+    ThemeMode themeMode = ThemeMode.system,
     this.useVoiceInput = false,
     this.useVoiceOutput = false,
     this.languageCode = 'en',
-  }) : preferences = preferences ?? {};
+  }) : 
+    preferences = preferences ?? {},
+    themeModeString = _themeModeToString(themeMode);
   
   /// Creates UserSettings from a JSON map.
   factory UserSettings.fromJson(Map<String, dynamic> json) {
@@ -47,11 +38,19 @@ class UserSettings {
     return {
       'preferences': preferences,
       'selectedModelId': selectedModelId,
-      'themeMode': themeMode.toString().split('.').last,
+      'themeMode': themeModeString,
       'useVoiceInput': useVoiceInput,
       'useVoiceOutput': useVoiceOutput,
       'languageCode': languageCode,
     };
+  }
+  
+  /// Gets the theme mode from the stored string
+  ThemeMode get themeMode => _themeModeFromString(themeModeString);
+  
+  /// Sets the theme mode by updating the string
+  set themeMode(ThemeMode mode) {
+    themeModeString = _themeModeToString(mode);
   }
   
   /// Converts a string to ThemeMode.
@@ -64,6 +63,11 @@ class UserSettings {
       default:
         return ThemeMode.system;
     }
+  }
+  
+  /// Converts ThemeMode to string.
+  static String _themeModeToString(ThemeMode mode) {
+    return mode.toString().split('.').last;
   }
   
   /// Returns a copy of these settings with the specified fields replaced.
@@ -98,5 +102,52 @@ class UserSettings {
   @override
   String toString() {
     return 'UserSettings(selectedModelId: $selectedModelId, themeMode: $themeMode, languageCode: $languageCode)';
+  }
+}
+
+class UserSettingsAdapter extends TypeAdapter<UserSettings> {
+  @override
+  final int typeId = 4;
+
+  @override
+  UserSettings read(BinaryReader reader) {
+    final int length = reader.readInt();
+    final Map<String, dynamic> preferences = {};
+    
+    for (var i = 0; i < length; i++) {
+      final key = reader.readString();
+      final value = reader.read();
+      preferences[key] = value;
+    }
+    
+    final selectedModelId = reader.readString();
+    final themeModeString = reader.readString();
+    final useVoiceInput = reader.readBool();
+    final useVoiceOutput = reader.readBool();
+    final languageCode = reader.readString();
+    
+    return UserSettings(
+      preferences: preferences,
+      selectedModelId: selectedModelId.isEmpty ? null : selectedModelId,
+      themeMode: UserSettings._themeModeFromString(themeModeString),
+      useVoiceInput: useVoiceInput,
+      useVoiceOutput: useVoiceOutput,
+      languageCode: languageCode,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, UserSettings obj) {
+    writer.writeInt(obj.preferences.length);
+    obj.preferences.forEach((key, value) {
+      writer.writeString(key);
+      writer.write(value);
+    });
+    
+    writer.writeString(obj.selectedModelId ?? '');
+    writer.writeString(obj.themeModeString);
+    writer.writeBool(obj.useVoiceInput);
+    writer.writeBool(obj.useVoiceOutput);
+    writer.writeString(obj.languageCode);
   }
 }

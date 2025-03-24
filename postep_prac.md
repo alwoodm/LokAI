@@ -6,8 +6,8 @@ Ten plik służy do śledzenia postępu prac nad aplikacją LokAI zgodnie z inst
 
 ### 1. Konfiguracja projektu i środowiska pracy
 - [x] 1.1. Utworzenie projektu Flutter
-- [x] 1.2. Konfiguracja zależności w pubspec.yaml
-- [x] 1.3. Struktura projektu Flutter
+- [] 1.2. Konfiguracja zależności w pubspec.yaml
+- [] 1.3. Struktura projektu Flutter
 
 ### 2. Implementacja architektury aplikacji
 - [] 2.1. Modele danych i schematy
@@ -46,7 +46,7 @@ Ten plik służy do śledzenia postępu prac nad aplikacją LokAI zgodnie z inst
 ### 9. Funkcje dodatkowe
 - [] 9.1. Eksport i import rozmów
 - [] 9.2. Widżety homescreen dla Androida i iOS
-- [x] 9.3. Obsługa wielu języków (internationalization)
+- [] 9.3. Obsługa wielu języków (internationalization)
 
 ### 10. Finalizacja i publikacja
 - [] 10.1. Przygotowanie wersji produkcyjnej dla Android i iOS
@@ -55,23 +55,9 @@ Ten plik służy do śledzenia postępu prac nad aplikacją LokAI zgodnie z inst
 
 ## Notatki z postępu prac
 
-### 2025-03-22
+### 2023-06-23
 1. Utworzono nowy projekt Flutter o nazwie LokAI z następującymi parametrami:
    - Organizacja: com.lokai
    - Platformy docelowe: Android i iOS
    - Zastosowano Material 3 w motywie aplikacji
    - Dostosowano ekran główny do wymagań projektu
-
-### 2025-03-24
-1. Zmieniono interfejs aplikacji z języka polskiego na angielski
-2. Przygotowano strukturę projektu do obsługi wielu języków:
-   - Dodano pakiety `flutter_localizations` i `intl` do `pubspec.yaml`
-   - Utworzono katalog `l10n` z plikami lokalizacyjnymi dla języka angielskiego i polskiego
-   - Skonfigurowano aplikację z komentarzami do przyszłej implementacji pełnej lokalizacji
-3. Zaimplementowano modele danych:
-   - Utworzono klasę `Conversation` do przechowywania informacji o konwersacjach
-   - Utworzono klasę `Message` do przechowywania wiadomości w konwersacjach
-   - Utworzono klasę `AIModel` do zarządzania modelami AI
-   - Utworzono klasę `UserSettings` do przechowywania ustawień użytkownika
-   - Dodano metody serializacji/deserializacji JSON dla wszystkich modeli
-   - Skonfigurowano generatory UUID dla identyfikatorów

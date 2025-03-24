@@ -1,20 +1,14 @@
+import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 
-/// Represents a single message in a conversation.
+// Usuwamy part directive, ponieważ implementujemy adapter ręcznie
+// part 'message.g.dart';
+
 class Message {
-  /// Unique identifier for the message
   final String id;
-  
-  /// Content of the message
   final String text;
-  
-  /// Whether the message was sent by the user (true) or the AI (false)
   final bool isUser;
-  
-  /// ID of the conversation this message belongs to
   final String conversationId;
-  
-  /// When the message was sent or received
   final DateTime timestamp;
 
   /// Creates a new message with the given parameters.
@@ -63,4 +57,35 @@ class Message {
   
   @override
   int get hashCode => id.hashCode;
+}
+
+class MessageAdapter extends TypeAdapter<Message> {
+  @override
+  final int typeId = 2;
+
+  @override
+  Message read(BinaryReader reader) {
+    final id = reader.readString();
+    final text = reader.readString();
+    final isUser = reader.readBool();
+    final conversationId = reader.readString();
+    final timestamp = DateTime.parse(reader.readString());
+    
+    return Message(
+      id: id,
+      text: text,
+      isUser: isUser,
+      conversationId: conversationId,
+      timestamp: timestamp,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Message obj) {
+    writer.writeString(obj.id);
+    writer.writeString(obj.text);
+    writer.writeBool(obj.isUser);
+    writer.writeString(obj.conversationId);
+    writer.writeString(obj.timestamp.toIso8601String());
+  }
 }

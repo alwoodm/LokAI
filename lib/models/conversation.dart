@@ -1,17 +1,10 @@
+import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 
-/// Represents a conversation between the user and the AI.
 class Conversation {
-  /// Unique identifier for the conversation
   final String id;
-  
-  /// Title of the conversation
   String title;
-  
-  /// When the conversation was created
   final DateTime createdAt;
-  
-  /// When the conversation was last updated
   DateTime updatedAt;
 
   /// Creates a new conversation with the given parameters.
@@ -71,4 +64,32 @@ class Conversation {
   
   @override
   int get hashCode => id.hashCode;
+}
+
+class ConversationAdapter extends TypeAdapter<Conversation> {
+  @override
+  final int typeId = 1;
+
+  @override
+  Conversation read(BinaryReader reader) {
+    final id = reader.readString();
+    final title = reader.readString();
+    final createdAt = DateTime.parse(reader.readString());
+    final updatedAt = DateTime.parse(reader.readString());
+    
+    return Conversation(
+      id: id,
+      title: title,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Conversation obj) {
+    writer.writeString(obj.id);
+    writer.writeString(obj.title);
+    writer.writeString(obj.createdAt.toIso8601String());
+    writer.writeString(obj.updatedAt.toIso8601String());
+  }
 }
