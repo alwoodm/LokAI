@@ -68,3 +68,10 @@ Ten plik służy do śledzenia postępu prac nad aplikacją LokAI zgodnie z inst
    - Dodano pakiety `flutter_localizations` i `intl` do `pubspec.yaml`
    - Utworzono katalog `l10n` z plikami lokalizacyjnymi dla języka angielskiego i polskiego
    - Skonfigurowano aplikację z komentarzami do przyszłej implementacji pełnej lokalizacji
+3. Zaimplementowano modele danych:
+   - Utworzono klasę `Conversation` do przechowywania informacji o konwersacjach
+   - Utworzono klasę `Message` do przechowywania wiadomości w konwersacjach
+   - Utworzono klasę `AIModel` do zarządzania modelami AI
+   - Utworzono klasę `UserSettings` do przechowywania ustawień użytkownika
+   - Dodano metody serializacji/deserializacji JSON dla wszystkich modeli
+   - Skonfigurowano generatory UUID dla identyfikatorów
