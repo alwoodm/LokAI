@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+// Generated file once we use the 'generate: true' option and 'flutter gen-l10n'
+// import 'package:lokai/l10n/app_localizations.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,9 +16,20 @@ class MyApp extends StatelessWidget {
       title: 'LokAI',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true, // Włączenie Material 3
+        useMaterial3: true, // Enable Material 3
       ),
-      home: const MyHomePage(title: 'LokAI - Lokalny Asystent AI'),
+      // Uncomment these lines when we add actual translations
+      // localizationsDelegates: const [
+      //   AppLocalizations.delegate,
+      //   GlobalMaterialLocalizations.delegate,
+      //   GlobalWidgetsLocalizations.delegate,
+      //   GlobalCupertinoLocalizations.delegate,
+      // ],
+      // supportedLocales: const [
+      //   Locale('en', ''), // English
+      //   Locale('pl', ''), // Polish
+      // ],
+      home: const MyHomePage(title: 'LokAI - Local AI Assistant'),
     );
   }
 }
@@ -49,11 +63,11 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('Witaj w aplikacji LokAI!'),
+            const Text('Welcome to LokAI!'),
             const SizedBox(height: 20),
-            const Text('Twój lokalny asystent AI na urządzeniu mobilnym'),
+            const Text('Your local AI assistant on your mobile device'),
             const SizedBox(height: 40),
-            const Text('Licznik testowy (do usunięcia):'),
+            const Text('Test counter (to be removed):'),
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,

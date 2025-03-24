@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "appTitle": "LokAI - Local AI Assistant",
+  "welcome": "Welcome to LokAI!",
+  "appDescription": "Your local AI assistant on your mobile device",
+  "testCounter": "Test counter (to be removed):"
+}
