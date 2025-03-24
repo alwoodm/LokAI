@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// Usunięto nieużywany import flutter_localizations
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lokai/models/adapters/hive_adapters.dart';
 // Generated file once we use the 'generate: true' option and 'flutter gen-l10n'
@@ -14,22 +14,20 @@ void main() async {
   // Register all adapters
   try {
     HiveAdapters.registerAdapters();
-    // Zastąpiono print logowaniem lub komentarzem
-    // print('Hive adapters registered successfully');
+    debugPrint('Hive adapters registered successfully');
   } catch (e) {
-    // Zastąpiono print logowaniem lub komunikatem do użytkownika
-    // print('Error registering Hive adapters: $e');
     debugPrint('Error registering Hive adapters: $e');
   }
   
-  runApp(const MyApp());
+  // Owijamy aplikację w ProviderScope, aby udostępnić dostawców Riverpod
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'LokAI',
       theme: ThemeData(
@@ -52,16 +50,16 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends ConsumerStatefulWidget {
   const MyHomePage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  ConsumerState<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends ConsumerState<MyHomePage> {
   int _counter = 0;
 
   void _incrementCounter() {
