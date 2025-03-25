@@ -41,7 +41,7 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
           conversationsAsync.when(
-            data: (conversations) => _buildConversationsList(context, conversations),
+            data: (conversations) => _buildConversationsList(context, ref, conversations),
             loading: () => const SliverToBoxAdapter(
               child: Center(child: CircularProgressIndicator()),
             ),
@@ -101,7 +101,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildConversationsList(BuildContext context, List<Conversation> conversations) {
+  Widget _buildConversationsList(BuildContext context, WidgetRef ref, List<Conversation> conversations) {
     if (conversations.isEmpty) {
       return const SliverToBoxAdapter(
         child: Center(
