@@ -10,6 +10,7 @@ class Message {
   final bool isUser;
   final String conversationId;
   final DateTime timestamp;
+  final int tokenCount; // Liczba tokenów w wiadomości
 
   /// Creates a new message with the given parameters.
   Message({
@@ -18,6 +19,7 @@ class Message {
     required this.isUser,
     required this.conversationId,
     DateTime? timestamp,
+    this.tokenCount = 0,
   }) : 
     id = id ?? const Uuid().v4(),
     timestamp = timestamp ?? DateTime.now();
@@ -30,6 +32,7 @@ class Message {
       isUser: json['isUser'] as bool,
       conversationId: json['conversationId'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
+      tokenCount: json['tokenCount'] as int? ?? 0,
     );
   }
   
@@ -41,6 +44,7 @@ class Message {
       'isUser': isUser,
       'conversationId': conversationId,
       'timestamp': timestamp.toIso8601String(),
+      'tokenCount': tokenCount,
     };
   }
   
@@ -70,6 +74,7 @@ class MessageAdapter extends TypeAdapter<Message> {
     final isUser = reader.readBool();
     final conversationId = reader.readString();
     final timestamp = DateTime.parse(reader.readString());
+    final tokenCount = reader.readInt();
     
     return Message(
       id: id,
@@ -77,6 +82,7 @@ class MessageAdapter extends TypeAdapter<Message> {
       isUser: isUser,
       conversationId: conversationId,
       timestamp: timestamp,
+      tokenCount: tokenCount,
     );
   }
 
@@ -87,5 +93,6 @@ class MessageAdapter extends TypeAdapter<Message> {
     writer.writeBool(obj.isUser);
     writer.writeString(obj.conversationId);
     writer.writeString(obj.timestamp.toIso8601String());
+    writer.writeInt(obj.tokenCount);
   }
 }

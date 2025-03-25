@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../services/conversation_service.dart';
+import '../../models/conversation.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final conversationsAsync = ref.watch(allConversationsProvider);
+    
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -35,20 +40,13 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                // This would normally come from a repository
-                return ListTile(
-                  title: Text('Conversation ${index + 1}'),
-                  subtitle: Text('Last message from conversation ${index + 1}'),
-                  leading: CircleAvatar(
-                    child: Text('${index + 1}'),
-                  ),
-                  onTap: () => context.go('/chat/$index'),
-                );
-              },
-              childCount: 10, // Example count
+          conversationsAsync.when(
+            data: (conversations) => _buildConversationsList(context, conversations),
+            loading: () => const SliverToBoxAdapter(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stack) => SliverToBoxAdapter(
+              child: Center(child: Text('Error: $error')),
             ),
           ),
           SliverToBoxAdapter(
@@ -97,13 +95,97 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Create a new conversation and navigate to it
-          final newId = DateTime.now().millisecondsSinceEpoch.toString();
-          context.go('/chat/$newId');
-        },
+        onPressed: () => _createNewConversation(context, ref),
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Widget _buildConversationsList(BuildContext context, List<Conversation> conversations) {
+    if (conversations.isEmpty) {
+      return const SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Text('No conversations yet. Start a new one!'),
+          ),
+        ),
+      );
+    }
+    
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final conversation = conversations[index];
+          return ListTile(
+            title: Text(conversation.title),
+            subtitle: Text(
+              'Created ${_formatDate(conversation.createdAt)}',
+            ),
+            leading: CircleAvatar(
+              child: Text('${index + 1}'),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _deleteConversation(context, ref, conversation),
+            ),
+            onTap: () => context.go('/chat/${conversation.id}'),
+          );
+        },
+        childCount: conversations.length,
+      ),
+    );
+  }
+
+  Future<void> _createNewConversation(BuildContext context, WidgetRef ref) async {
+    final conversationService = ref.read(conversationServiceProvider);
+    final conversation = await conversationService.createConversation('');
+    
+    if (context.mounted) {
+      context.go('/chat/${conversation.id}');
+    }
+  }
+
+  Future<void> _deleteConversation(BuildContext context, WidgetRef ref, Conversation conversation) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Conversation'),
+        content: Text('Are you sure you want to delete "${conversation.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed == true) {
+      final conversationService = ref.read(conversationServiceProvider);
+      await conversationService.deleteConversation(conversation.id);
+      
+      // Odśwież listę konwersacji
+      ref.invalidate(allConversationsProvider);
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inDays == 0) {
+      return 'Today, ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 }

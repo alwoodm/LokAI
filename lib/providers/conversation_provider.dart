@@ -25,48 +25,49 @@ final conversationProvider = FutureProvider.family<Conversation?, String>((ref, 
   return repository.getConversation(id);
 });
 
-// Notifier dla zarządzania konwersacjami (CRUD)
-class ConversationNotifier extends StateNotifier<AsyncValue<List<Conversation>>> {
+// Notifier dla operacji na konwersacjach
+class ConversationNotifier extends StateNotifier<List<Conversation>> {
   final ConversationRepository _repository;
-  
-  ConversationNotifier(this._repository) : super(const AsyncValue.loading()) {
-    loadConversations();
-  }
-  
+
+  ConversationNotifier(this._repository) : super([]);
+
   Future<void> loadConversations() async {
-    state = const AsyncValue.loading();
-    try {
-      final conversations = await _repository.getAllConversations();
-      state = AsyncValue.data(conversations);
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
-    }
+    final conversations = await _repository.getAllConversations();
+    state = conversations;
   }
-  
-  Future<String> addConversation(Conversation conversation) async {
-    final id = await _repository.createConversation(conversation);
-    loadConversations(); // Odświeżamy listę
-    return id;
+
+  Future<Conversation> createNewConversation(String title, String modelId) async {
+    final conversation = Conversation(
+      title: title,
+      modelId: modelId,
+    );
+    
+    final createdConversation = await _repository.createConversation(conversation);
+    state = [...state, createdConversation];
+    return createdConversation;
   }
-  
+
   Future<void> updateConversation(Conversation conversation) async {
     await _repository.updateConversation(conversation);
-    loadConversations(); // Odświeżamy listę
+    
+    state = state.map((c) => c.id == conversation.id ? conversation : c).toList();
   }
-  
+
   Future<void> deleteConversation(String id) async {
     await _repository.deleteConversation(id);
-    loadConversations(); // Odświeżamy listę
+    
+    state = state.where((conversation) => conversation.id != id).toList();
   }
-  
+
   Future<void> deleteAllConversations() async {
     await _repository.deleteAllConversations();
-    loadConversations(); // Odświeżamy listę
+    
+    state = [];
   }
 }
 
 // Provider dla ConversationNotifier
-final conversationNotifierProvider = StateNotifierProvider<ConversationNotifier, AsyncValue<List<Conversation>>>((ref) {
+final conversationNotifierProvider = StateNotifierProvider<ConversationNotifier, List<Conversation>>((ref) {
   final repository = ref.watch(conversationRepositoryProvider);
   return ConversationNotifier(repository);
 });

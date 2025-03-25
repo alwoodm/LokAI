@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/conversation_service.dart';
+import '../../models/message.dart';
 import '../widgets/message_bubble.dart';
 
-class ChatScreen extends StatefulWidget {
+class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
 
   const ChatScreen({
@@ -10,24 +13,24 @@ class ChatScreen extends StatefulWidget {
   });
 
   @override
-  State<ChatScreen> createState() => _ChatScreenState();
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
-  final List<Map<String, dynamic>> _messages = [];
   bool _isGenerating = false;
 
   @override
   void initState() {
     super.initState();
-    // Here you would load existing messages from the repository
-    // For now, we'll add some dummy messages
-    _messages.add({
-      'text': 'Hello! How can I help you today?',
-      'isUser': false,
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 5)),
-    });
+    _initializeConversation();
+  }
+
+  Future<void> _initializeConversation() async {
+    final conversationService = ref.read(conversationServiceProvider);
+    
+    // Aktywuj konwersację
+    await conversationService.activateConversation(widget.conversationId);
   }
 
   @override
@@ -39,31 +42,17 @@ class _ChatScreenState extends State<ChatScreen> {
   void _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
-    final userMessage = {
-      'text': _messageController.text,
-      'isUser': true,
-      'timestamp': DateTime.now(),
-    };
-
     setState(() {
-      _messages.add(userMessage);
-      _messageController.clear();
       _isGenerating = true;
     });
 
-    // Simulate AI response (would actually call the AI service)
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() {
-        _messages.add({
-          'text': 'I received your message: "${userMessage['text']}"',
-          'isUser': false,
-          'timestamp': DateTime.now(),
-        });
-        _isGenerating = false;
-      });
-    }
+    final conversationService = ref.read(conversationServiceProvider);
+    await conversationService.addUserMessage(_messageController.text);
+    
+    setState(() {
+      _messageController.clear();
+      // _isGenerating będzie ustawione na false, gdy odpowiedź będzie gotowa
+    });
   }
 
   void _activateVoice() {
@@ -76,26 +65,28 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Pobieramy aktywną konwersację
+    final conversationAsync = ref.watch(activeConversationProvider);
+    
+    // Pobieramy wiadomości dla tej konwersacji
+    final messagesAsync = ref.watch(activeConversationMessagesProvider(widget.conversationId));
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text('Conversation ${widget.conversationId}'),
+        title: conversationAsync.when(
+          data: (conversation) => Text(conversation?.title ?? 'New Conversation'),
+          loading: () => const Text('Loading...'),
+          error: (_, __) => const Text('Conversation'),
+        ),
         elevation: 2,
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              reverse: true,
-              padding: const EdgeInsets.all(8.0),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[_messages.length - 1 - index];
-                return MessageBubble(
-                  message: message['text'],
-                  isUser: message['isUser'],
-                  timestamp: message['timestamp'],
-                );
-              },
+            child: messagesAsync.when(
+              data: (messages) => _buildMessageList(messages),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(child: Text('Error: $error')),
             ),
           ),
           if (_isGenerating)
@@ -149,6 +140,29 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMessageList(List<Message> messages) {
+    // Jeśli nie ma wiadomości, wyświetl komunikat powitalny
+    if (messages.isEmpty) {
+      return const Center(
+        child: Text('Start a conversation by sending a message'),
+      );
+    }
+
+    return ListView.builder(
+      reverse: true,
+      padding: const EdgeInsets.all(8.0),
+      itemCount: messages.length,
+      itemBuilder: (context, index) {
+        final message = messages[messages.length - 1 - index];
+        return MessageBubble(
+          message: message.text,
+          isUser: message.isUser,
+          timestamp: message.timestamp,
+        );
+      },
     );
   }
 }

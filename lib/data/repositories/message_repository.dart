@@ -1,98 +1,176 @@
-import 'package:hive/hive.dart';
-import 'package:lokai/models/message.dart';
+import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../../models/message.dart';
 
 class MessageRepository {
   static const String _boxName = 'messages';
-  static Box? _box;
+  late Box<Message> _box;
   
-  /// Opens the messages box
-  Future<Box> _openBox() async {
-    if (_box != null && _box!.isOpen) {
-      return _box!;
+  Future<void> initialize() async {
+    if (!Hive.isBoxOpen(_boxName)) {
+      _box = await Hive.openBox<Message>(_boxName);
+    } else {
+      _box = Hive.box<Message>(_boxName);
+    }
+  }
+  
+  /// Pobiera wszystkie wiadomości dla danej konwersacji
+  Future<List<Message>> getMessagesForConversation(String conversationId) async {
+    if (!Hive.isBoxOpen(_boxName)) {
+      await initialize();
     }
     
-    if (Hive.isBoxOpen(_boxName)) {
-      _box = Hive.box(_boxName);
-      return _box!;
-    }
-    
-    _box = await Hive.openBox(_boxName);
-    return _box!;
-  }
-  
-  /// Creates a new message
-  Future<String> createMessage(Message message) async {
-    final box = await _openBox();
-    await box.put(message.id, message);
-    return message.id;
-  }
-  
-  /// Gets a message by id
-  Future<Message?> getMessage(String id) async {
-    final box = await _openBox();
-    final dynamic result = box.get(id);
-    if (result is Message) {
-      return result;
-    }
-    return null;
-  }
-  
-  /// Gets all messages for a conversation
-  Future<List<Message>> getConversationMessages(String conversationId) async {
-    final box = await _openBox();
-    return box.values
-        .whereType<Message>()
+    final messages = _box.values
         .where((message) => message.conversationId == conversationId)
         .toList();
-  }
-  
-  /// Gets messages for a conversation sorted by timestamp
-  Future<List<Message>> getConversationMessagesSorted(String conversationId) async {
-    final messages = await getConversationMessages(conversationId);
+    
     messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    
     return messages;
   }
   
-  /// Deletes a message
-  Future<void> deleteMessage(String id) async {
-    final box = await _openBox();
-    await box.delete(id);
-  }
-  
-  /// Deletes all messages for a conversation
-  Future<void> deleteConversationMessages(String conversationId) async {
-    final box = await _openBox();
-    final messagesToDelete = box.values.where((message) => 
-      message.conversationId == conversationId
-    ).map((message) => message.id).toList();
+  /// Pobiera posortowane wiadomości dla danej konwersacji
+  Future<List<Message>> getConversationMessagesSorted(String conversationId, {bool descending = false}) async {
+    final messages = await getMessagesForConversation(conversationId);
     
-    for (final id in messagesToDelete) {
-      await box.delete(id);
+    if (descending) {
+      messages.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    } else {
+      messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     }
+    
+    return messages;
   }
   
-  /// Gets the latest message for each conversation
-  Future<Map<String, Message>> getLatestMessages() async {
-    final box = await _openBox();
-    final messages = box.values.whereType<Message>().toList();
+  /// Pobiera najnowsze wiadomości z różnych konwersacji
+  Future<List<Message>> getLatestMessages({int limit = 10}) async {
+    if (!Hive.isBoxOpen(_boxName)) {
+      await initialize();
+    }
     
-    // Group messages by conversation ID
-    final Map<String, List<Message>> groupedMessages = {};
+    final messages = _box.values.toList();
+    messages.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    
+    // Group by conversation and take the latest from each
+    final Map<String, Message> latestByConversation = {};
     for (final message in messages) {
-      if (!groupedMessages.containsKey(message.conversationId)) {
-        groupedMessages[message.conversationId] = [];
+      final conversationId = message.conversationId;
+      if (!latestByConversation.containsKey(conversationId) || 
+          message.timestamp.isAfter(latestByConversation[conversationId]!.timestamp)) {
+        latestByConversation[conversationId] = message;
       }
-      groupedMessages[message.conversationId]!.add(message);
     }
     
-    // Get the latest message for each conversation
-    final Map<String, Message> latestMessages = {};
-    for (final entry in groupedMessages.entries) {
-      final conversationMessages = entry.value;
-      conversationMessages.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      latestMessages[entry.key] = conversationMessages.first;
+    final result = latestByConversation.values.toList();
+    result.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    
+    return result.take(limit).toList();
+  }
+  
+  /// Pobiera wiadomość po ID
+  Future<Message?> getMessage(String id) async {
+    if (!Hive.isBoxOpen(_boxName)) {
+      await initialize();
     }
     
-    return latestMessages;
+    try {
+      return _box.get(id);
+    } catch (e) {
+      debugPrint('Error getting message: $e');
+      return null;
+    }
+  }
+  
+  /// Tworzy nową wiadomość
+  Future<Message> createMessage(Message message) async {
+    if (!Hive.isBoxOpen(_boxName)) {
+      await initialize();
+    }
+    
+    try {
+      await _box.put(message.id, message);
+      return message;
+    } catch (e) {
+      debugPrint('Error creating message: $e');
+      throw Exception('Failed to create message: $e');
+    }
+  }
+  
+  /// Pobiera wiele wiadomości po ID
+  Future<List<Message>> getMessagesByIds(List<String> ids) async {
+    if (!Hive.isBoxOpen(_boxName)) {
+      await initialize();
+    }
+    
+    final messages = <Message>[];
+    
+    for (final id in ids) {
+      final message = await getMessage(id);
+      if (message != null) {
+        messages.add(message);
+      }
+    }
+    
+    messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    
+    return messages;
+  }
+  
+  /// Zapisuje wiadomość
+  Future<void> saveMessage(Message message) async {
+    if (!Hive.isBoxOpen(_boxName)) {
+      await initialize();
+    }
+    
+    try {
+      await _box.put(message.id, message);
+    } catch (e) {
+      debugPrint('Error saving message: $e');
+    }
+  }
+  
+  /// Usuwa wiadomość
+  Future<void> deleteMessage(String id) async {
+    if (!Hive.isBoxOpen(_boxName)) {
+      await initialize();
+    }
+    
+    try {
+      await _box.delete(id);
+    } catch (e) {
+      debugPrint('Error deleting message: $e');
+    }
+  }
+  
+  /// Usuwa wszystkie wiadomości dla konwersacji
+  Future<void> deleteAllMessagesForConversation(String conversationId) async {
+    if (!Hive.isBoxOpen(_boxName)) {
+      await initialize();
+    }
+    
+    try {
+      final messageKeys = _box.values
+          .where((message) => message.conversationId == conversationId)
+          .map((message) => message.id)
+          .toList();
+      
+      for (final key in messageKeys) {
+        await _box.delete(key);
+      }
+    } catch (e) {
+      debugPrint('Error deleting messages for conversation: $e');
+    }
+  }
+  
+  /// Alias dla deleteAllMessagesForConversation
+  Future<void> deleteConversationMessages(String conversationId) async {
+    return deleteAllMessagesForConversation(conversationId);
+  }
+  
+  /// Zamyka box Hive
+  Future<void> close() async {
+    if (Hive.isBoxOpen(_boxName)) {
+      await _box.close();
+    }
   }
 }

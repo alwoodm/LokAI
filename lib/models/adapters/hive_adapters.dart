@@ -1,46 +1,25 @@
-import 'package:hive/hive.dart';
-import 'package:lokai/models/conversation.dart';
-import 'package:lokai/models/message.dart';
-import 'package:lokai/models/ai_model.dart';
-import 'package:lokai/models/user_settings.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../ai_model.dart';
+import '../conversation.dart';
+import '../message.dart';
 
-/// Class to register all Hive adapters
+/// Klasa pomocnicza do rejestracji adapterów Hive
 class HiveAdapters {
-  /// Register all adapters
+  /// Rejestruje wszystkie adaptery Hive
   static void registerAdapters() {
-    Hive.registerAdapter(ConversationAdapter());
-    Hive.registerAdapter(MessageAdapter());
-    Hive.registerAdapter(AIModelAdapter());
-    Hive.registerAdapter(UserSettingsAdapter());
-    
-    // Register adapters for complex types used in models
-    Hive.registerAdapter(MapAdapter());
-  }
-}
-
-/// Adapter for Map objects
-class MapAdapter extends TypeAdapter<Map<String, dynamic>> {
-  @override
-  final int typeId = 10;
-  
-  @override
-  Map<String, dynamic> read(BinaryReader reader) {
-    final int length = reader.readInt();
-    final Map<String, dynamic> map = {};
-    for (var i = 0; i < length; i++) {
-      final key = reader.read() as String;
-      final value = reader.read();
-      map[key] = value;
+    // Adapter dla AIModel
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(AIModelAdapter());
     }
-    return map;
-  }
-  
-  @override
-  void write(BinaryWriter writer, Map<String, dynamic> obj) {
-    writer.writeInt(obj.length);
-    obj.forEach((key, value) {
-      writer.write(key);
-      writer.write(value);
-    });
+    
+    // Adapter dla Conversation
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(ConversationAdapter());
+    }
+    
+    // Adapter dla Message
+    if (!Hive.isAdapterRegistered(2)) {
+      Hive.registerAdapter(MessageAdapter());
+    }
   }
 }
