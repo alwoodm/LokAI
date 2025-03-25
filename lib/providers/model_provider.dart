@@ -8,15 +8,14 @@ final modelRepositoryProvider = Provider<ModelRepository>((ref) {
 });
 
 // Provider dla wszystkich modeli AI
-final allModelsProvider = FutureProvider<List<AIModel>>((ref) async {
-  final repository = ref.watch(modelRepositoryProvider);
-  return repository.getAllModels();
+final allModelsProvider = Provider<List<AIModel>>((ref) {
+  return ref.watch(modelNotifierProvider);
 });
 
 // Provider dla aktywnego modelu AI
-final activeModelProvider = FutureProvider<AIModel?>((ref) async {
-  final repository = ref.watch(modelRepositoryProvider);
-  return repository.getActiveModel();
+final activeModelProvider = Provider<AIModel?>((ref) {
+  final models = ref.watch(modelNotifierProvider);
+  return models.isNotEmpty ? models.first : null;
 });
 
 // Provider dla pojedynczego modelu AI
@@ -26,47 +25,34 @@ final modelProvider = FutureProvider.family<AIModel?, String>((ref, id) async {
 });
 
 // Notifier dla zarządzania modelami AI (CRUD)
-class ModelNotifier extends StateNotifier<AsyncValue<List<AIModel>>> {
-  final ModelRepository _repository;
+class ModelNotifier extends StateNotifier<List<AIModel>> {
+  ModelNotifier() : super([]);
   
-  ModelNotifier(this._repository) : super(const AsyncValue.loading()) {
-    loadModels();
-  }
-  
-  Future<void> loadModels() async {
-    state = const AsyncValue.loading();
-    try {
-      final models = await _repository.getAllModels();
-      state = AsyncValue.data(models);
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+  void addModel(AIModel model) {
+    // Check if model already exists
+    final modelIndex = state.indexWhere((m) => m.id == model.id);
+    if (modelIndex >= 0) {
+      // Update existing model
+      final updatedModels = [...state];
+      updatedModels[modelIndex] = model;
+      state = updatedModels;
+    } else {
+      // Add new model
+      state = [...state, model];
     }
   }
   
-  Future<String> addModel(AIModel model) async {
-    final id = await _repository.addModel(model);
-    loadModels(); // Odświeżamy listę
-    return id;
+  void removeModel(String modelId) {
+    state = state.where((model) => model.id != modelId).toList();
   }
   
-  Future<void> updateModel(AIModel model) async {
-    await _repository.updateModel(model);
-    loadModels(); // Odświeżamy listę
-  }
-  
-  Future<void> deleteModel(String id) async {
-    await _repository.deleteModel(id);
-    loadModels(); // Odświeżamy listę
-  }
-  
-  Future<void> setActiveModel(String id) async {
-    await _repository.setActiveModel(id);
-    loadModels(); // Odświeżamy listę
+  void setActiveModel(String modelId) {
+    // Implementation would depend on how you track active models
+    // This is just a placeholder
   }
 }
 
 // Provider dla ModelNotifier
-final modelNotifierProvider = StateNotifierProvider<ModelNotifier, AsyncValue<List<AIModel>>>((ref) {
-  final repository = ref.watch(modelRepositoryProvider);
-  return ModelNotifier(repository);
+final modelNotifierProvider = StateNotifierProvider<ModelNotifier, List<AIModel>>((ref) {
+  return ModelNotifier();
 });

@@ -10,7 +10,7 @@ class AIModel {
   final String description;
   final int size;
   final String filePath;
-  final DateTime downloadedAt;
+  final DateTime? downloadedAt;
   final String version;
   bool isActive;
 
@@ -50,7 +50,7 @@ class AIModel {
       'description': description,
       'size': size,
       'filePath': filePath,
-      'downloadedAt': downloadedAt.toIso8601String(),
+      'downloadedAt': downloadedAt?.toIso8601String(),
       'version': version,
       'isActive': isActive,
     };
@@ -87,6 +87,26 @@ class AIModel {
   
   @override
   int get hashCode => id.hashCode;
+
+  // Create a copy of this model with updated fields
+  AIModel copyWith({
+    String? name,
+    String? description,
+    int? size,
+    String? filePath,
+    String? version,
+    DateTime? downloadedAt,
+  }) {
+    return AIModel(
+      id: id, // Removed 'this.'
+      name: name ?? this.name,
+      description: description ?? this.description,
+      size: size ?? this.size,
+      filePath: filePath ?? this.filePath,
+      version: version ?? this.version,
+      downloadedAt: downloadedAt ?? this.downloadedAt,
+    );
+  }
 }
 
 class AIModelAdapter extends TypeAdapter<AIModel> {
@@ -123,7 +143,7 @@ class AIModelAdapter extends TypeAdapter<AIModel> {
     writer.writeString(obj.description);
     writer.writeInt(obj.size);
     writer.writeString(obj.filePath);
-    writer.writeString(obj.downloadedAt.toIso8601String());
+    writer.writeString(obj.downloadedAt?.toIso8601String() ?? '');
     writer.writeString(obj.version);
     writer.writeBool(obj.isActive);
   }

@@ -49,7 +49,7 @@ class MyApp extends ConsumerWidget {
             useMaterial3: true,
           ),
           themeMode: settings.themeMode,
-          routerConfig: appRouter,
+          routerConfig: AppRouter.router,
           debugShowCheckedModeBanner: false,
         );
       },
