@@ -169,3 +169,15 @@ Dostarczenie prostego w obsłudze, wydajnego i bezpiecznego rozwiązania umożli
 - Elastyczność w wyborze i zarządzaniu modelami
 - Cross-platformowość - dostępność zarówno na Androidzie jak i iOS
 - Natywna wydajność dzięki kompilacji do kodu natywnego przez Flutter
+
+## Aktualizacje
+
+### 2023-06-XX: Implementacja ModelManager
+
+Dodano funkcjonalność zarządzania modelami AI:
+
+- Stworzono klasę `ModelManager` do pobierania, instalacji i weryfikacji modeli AI
+- Zaimplementowano monitorowanie zajętej przestrzeni dyskowej
+- Dodano wsparcie dla śledzenia postępu pobierania modeli
+- Zaimplementowano mechanizm weryfikacji integralności pobranych plików za pomocą sum kontrolnych
+- Utworzono ekran testowy do testowania pobierania modeli

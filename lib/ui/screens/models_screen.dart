@@ -161,6 +161,15 @@ class ModelsScreen extends ConsumerWidget {
         backgroundColor: Theme.of(context).primaryColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
+      // Add a button to navigate to the test screen in development mode
+      persistentFooterButtons: [
+        if (kDebugMode)
+          TextButton.icon(
+            icon: const Icon(Icons.science),
+            label: const Text('Test Model Downloads'),
+            onPressed: () => context.go('/model-test'),
+          ),
+      ],
       // Remove the bottom navigation bar as it's already provided by the ShellRoute
     );
   }

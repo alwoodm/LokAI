@@ -58,6 +58,14 @@ final GoRouter appRouter = GoRouter(
       name: 'settings',
       builder: (context, state) => const SettingsScreen(),
     ),
+    
+    // Model Test screen (for development/testing)
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/model-test',
+      name: 'model-test',
+      builder: (context, state) => const ModelTestScreen(),
+    ),
   ],
 );
 

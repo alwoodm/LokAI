@@ -52,6 +52,15 @@ dependencies:
   
   # Navigation
   go_router: ^12.1.1
+  
+  # HTTP requests
+  http: ^1.1.0
+  
+  # Cryptographic operations
+  crypto: ^3.0.3
+  
+  # Disk space management
+  disk_space: ^0.2.1
 
 dev_dependencies:
   flutter_test:
