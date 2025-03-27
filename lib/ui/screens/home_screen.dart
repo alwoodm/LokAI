@@ -16,15 +16,17 @@ class HomeScreen extends ConsumerWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     // Function to handle refresh
-    Future<void> _handleRefresh() async {
-      // Reload conversations
-      ref.refresh(allConversationsProvider);
-      // Reload latest messages
-      ref.refresh(latestMessagesProvider);
+    Future<void> handleRefresh() async {
+      // Reload conversations - properly handle the returned Future
+      final conversationsFuture = ref.refresh(allConversationsProvider.future);
+      // Reload latest messages - properly handle the returned Future
+      final messagesFuture = ref.refresh(latestMessagesProvider.future);
       // Wait for both to complete
+      await Future.wait([conversationsFuture, messagesFuture]);
+      // Wait for UI to catch up
       await Future.delayed(const Duration(milliseconds: 500));
     }
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('LokAI'),
@@ -73,10 +75,10 @@ class HomeScreen extends ConsumerWidget {
                 ),
               );
             }
-            
+
             return latestMessagesAsync.when(
               data: (latestMessages) => RefreshIndicator(
-                onRefresh: _handleRefresh,
+                onRefresh: handleRefresh,
                 child: ListView.builder(
                   itemCount: conversations.length,
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -84,7 +86,7 @@ class HomeScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final conversation = conversations[index];
                     final lastMessage = latestMessages[conversation.id];
-                    
+
                     return Dismissible(
                       key: Key(conversation.id),
                       background: Container(
@@ -181,13 +183,13 @@ class HomeScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _createNewConversation(context, ref),
-        tooltip: 'New conversation',
         backgroundColor: Theme.of(context).primaryColor,
+        tooltip: 'New conversation',
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
-  
+
   // Dialog to confirm deletion
   Future<bool> _confirmDelete(BuildContext context, String title) async {
     return await showDialog<bool>(
